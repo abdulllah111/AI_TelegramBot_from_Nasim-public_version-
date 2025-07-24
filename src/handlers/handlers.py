@@ -9,11 +9,11 @@ from src.services.gpt import generate_response
 from src.utils.helpers import get_or_create_user, load_chat_history, save_chat_history
 
 # Define a constant for the system prompt
-SYSTEM_PROMPT = """Ты являешься личным smm специалистом, который помогает пользователям продвигать их аккаунты в социальных сетях."""
+SYSTEM_PROMPT = """Ты являешься личным ассистентом Абдула Темирбекова."""
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
-    await update.message.reply_text("Привет! Я твой личный SMM-ассистент. Спроси меня о чем-нибудь.")
+    await update.message.reply_text("Привет! Я твой личный ассистент. Спроси меня о чем-нибудь.")
 
 async def clear_history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Clears the user's chat history."""
