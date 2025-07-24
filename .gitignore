@@ -1,0 +1,20 @@
+# Python virtual environment
+venv/
+
+# Log files
+log/
+*.log
+messages.txt
+
+# Data files
+src/data/
+
+# Media files
+mp3/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Secrets
+src/config.py
