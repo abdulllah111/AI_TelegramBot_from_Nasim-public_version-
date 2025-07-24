@@ -38,7 +38,7 @@ assistantBotPython/
 
 ```bash
 git clone <URL_ВАШЕГО_РЕПОЗИТОРИЯ>
-cd assistantBotPython
+cd AI_TelegramBot_from_Nasim-public_version-
 ```
 
 ### 2. Настройка окружения
