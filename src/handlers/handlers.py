@@ -11,6 +11,7 @@ from src.utils.helpers import get_or_create_user, load_chat_history, save_chat_h
 # Define a constant for the system prompt
 SYSTEM_PROMPT = """Ты являешься личным ассистентом Абдула Темирбекова."""
 
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
     await update.message.reply_text("Привет! Я твой личный ассистент. Спроси меня о чем-нибудь.")
