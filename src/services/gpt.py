@@ -8,14 +8,14 @@ client = AsyncOpenAI(
 )
 
 async def generate_response(context: list[dict]) -> str | None:
-    """Generates a response from the AI model asynchronously."""
+    """Generates a response from the AI model."""
     try:
         response = await client.chat.completions.create(
             extra_headers={
                 "HTTP-Referer": "http://localhost",
                 "X-Title": "TG BOT",
             },
-            model="qwen/qwen3-235b-a22b-2507:free",
+            model="deepseek/deepseek-chat-v3-0324:free",
             messages=context,
         )
         return response.choices[0].message.content

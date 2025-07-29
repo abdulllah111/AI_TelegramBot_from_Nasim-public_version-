@@ -4,6 +4,9 @@
 # Databases
 bot_data.db
 
+# Persistence
+conversation_persistence
+
 # Logs
 /log/
 *.log

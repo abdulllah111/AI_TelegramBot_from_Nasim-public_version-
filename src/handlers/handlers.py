@@ -1,5 +1,6 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram.constants import ParseMode
 from telegram.error import TimedOut
 from telegram.ext import ContextTypes, ConversationHandler
 from src.config import ADMIN_ID
@@ -77,7 +78,14 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return MAIN_MENU
 
     add_request(user.id, message_text, response_text)
-    await update.message.reply_text(response_text)
+
+    max_length = 4096
+    if len(response_text) > max_length:
+        for i in range(0, len(response_text), max_length):
+            await update.message.reply_text(response_text[i:i + max_length], parse_mode=ParseMode.MARKDOWN)
+    else:
+        await update.message.reply_text(response_text, parse_mode=ParseMode.MARKDOWN)
+        
     return TYPING_REPLY
 
 async def admin_panel_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):

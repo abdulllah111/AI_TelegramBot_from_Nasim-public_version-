@@ -1,4 +1,4 @@
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ConversationHandler
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ConversationHandler, PicklePersistence
 from src.config import BOT_TOKEN
 from src.handlers.handlers import (
     start, main_menu, message_handler, admin_actions, view_user_history, done,
@@ -7,7 +7,8 @@ from src.handlers.handlers import (
 
 def main() -> None:
     """Start the bot."""
-    application = Application.builder().token(BOT_TOKEN).build()
+    persistence = PicklePersistence(filepath="conversation_persistence")
+    application = Application.builder().token(BOT_TOKEN).persistence(persistence).build()
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
@@ -18,6 +19,8 @@ def main() -> None:
             VIEW_USER_HISTORY: [MessageHandler(filters.TEXT & ~filters.COMMAND, view_user_history)],
         },
         fallbacks=[CommandHandler("done", done)],
+        name="main_conversation",
+        persistent=True,
         per_message=False
     )
 
