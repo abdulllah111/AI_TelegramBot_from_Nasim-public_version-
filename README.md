@@ -1,89 +1,66 @@
-# Телеграм-бот ассистент на базе OpenAI
+# AI Telegram SMM Assistant Bot
 
-Это проект телеграм-бота, который выполняет роль личного ассистента. Бот построен на асинхронной архитектуре с использованием библиотеки `python-telegram-bot` и интегрирован с API OpenAI для генерации осмысленных ответов.
+This is a Telegram bot that acts as a personal SMM assistant, powered by an AI model. It includes an admin panel for user management and request tracking.
 
-## Ключевые особенности
+## Features
 
-- **Асинхронная работа**: Бот использует `asyncio` для эффективной обработки запросов.
-- **Интеграция с OpenAI**: Генерирует ответы с помощью моделей OpenAI, доступных через OpenRouter.
-- **Модульная структура**: Код разделен на логические блоки (handlers, services, utils), что упрощает его понимание и расширение.
-- **Управление доступом**: Бот отвечает только администратору, ID которого указан в конфигурации.
-- **История чата**: Бот сохраняет историю переписки для каждого пользователя, что позволяет вести контекстный диалог.
-- **Изолированное окружение**: Все зависимости управляются через виртуальное окружение `venv`.
+- AI-powered SMM advice.
+- Admin panel to view user statistics.
+- Ability for admin to view user chat history.
+- Conversation history management (clearing history).
+- Secure configuration using a `.env` file.
 
-## Структура проекта
+## Prerequisites
 
-```
-assistantBotPython/
-├── venv/                  # Виртуальное окружение
-├── src/                   # Основной исходный код
-│   ├── data/              # Данные (истории чатов, пользователи) - игнорируется Git
-│   ├── handlers/          # Обработчики команд и сообщений Telegram
-│   │   └── handlers.py
-│   ├── services/          # Взаимодействие с внешними API (OpenAI)
-│   │   └── gpt.py
-│   ├── utils/             # Вспомогательные функции
-│   │   └── helpers.py
-│   ├── bot.py             # Логика и настройка приложения `python-telegram-bot`
-│   └── config.py          # Конфигурация (токены, ID)
-├── .gitignore             # Файлы и папки, игнорируемые Git
-├── main.py                # Точка входа для запуска бота
-├── README.md              # Этот файл
-└── requirements.txt       # Зависимости проекта
-```
+- Python 3.10+
 
-## Установка и запуск
+## Installation
 
-### 1. Клонирование репозитория
+1. **Clone the repository:**
+   ```sh
+   git clone <your-repository-url>
+   cd AI_TelegramBot
+   ```
 
-```bash
-git clone <URL_ВАШЕГО_РЕПОЗИТОРИЯ>
-cd AI_TelegramBot_from_Nasim-public_version-
-```
+2. **Create and activate a virtual environment:**
+   ```sh
+   # For Windows
+   python -m venv venv
+   venv\Scripts\activate
 
-### 2. Настройка окружения
+   # For macOS/Linux
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
 
-Создайте и активируйте виртуальное окружение:
+3. **Install the dependencies:**
+   ```sh
+   pip install -r requirements.txt
+   ```
 
-```bash
-# Создать venv
-python -m venv venv
+4. **Set up the environment variables:**
+   - Create a `.env` file by copying the example file:
+     ```sh
+     # For Windows
+     copy .env.example .env
 
-# Активировать venv в Windows
-venv\Scripts\activate
+     # For macOS/Linux
+     cp .env.example .env
+     ```
+   - Open the `.env` file and add your credentials.
 
-# Активировать venv в macOS/Linux
-source venv/bin/activate
-```
+## Running the Bot
 
-### 3. Установка зависимостей
+To start the bot, run the following command:
 
-Установите все необходимые библиотеки:
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Конфигурация
-
-Перед запуском необходимо указать ваши учетные данные в файле `src/config.py`:
-
-- `BOT_TOKEN`: Токен вашего телеграм-бота. Его можно получить у [@BotFather](https://t.me/BotFather).
-- `ADMIN_ID`: Ваш личный Telegram User ID. Вы можете узнать его у ботов вроде [@userinfobot](https://t.me/userinfobot).
-
-Также убедитесь, что в файле `src/services/gpt.py` указан ваш `API_KEY` для доступа к OpenRouter или другому сервису OpenAI.
-
-### 5. Запуск бота
-
-Для запуска бота выполните команду:
-
-```bash
+```sh
 python main.py
 ```
 
-Бот начнет работу и будет готов принимать сообщения. Для остановки нажмите `Ctrl+C` в терминале.
+## Configuration
 
-## Доступные команды
+The following environment variables are used for configuration:
 
-- `/start` - Отправляет приветственное сообщение.
-- `/clear_history` - (Только для администратора) Очищает и архивирует историю переписки.
+- `BOT_TOKEN`: Your Telegram Bot Token.
+- `OPENAI_API_KEY`: Your API key for the AI model (e.g., OpenRouter, OpenAI).
+- `ADMIN_ID`: Your personal Telegram User ID for admin access.
