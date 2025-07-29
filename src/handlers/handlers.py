@@ -6,39 +6,15 @@ from src.config import ADMIN_ID
 from src.services.gpt import generate_response
 from src.database import add_user, add_request, get_user_count, get_user_history, get_all_users, clear_user_history
 
-# States for conversation
-MAIN_MENU, TYPING_REPLY, ADMIN_PANEL, VIEW_USER_HISTORY = range(4)
+# Define a constant for the system prompt
+SYSTEM_PROMPT = """Ты являешься личным smm специалистом, который помогает пользователям продвигать их аккаунты в социальных сетях."""
 
-# Keyboards
-main_keyboard = [
-    [KeyboardButton("✍️ Написать ассистенту")],
-    [KeyboardButton("Очистить историю")],
-]
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message when the command /start is issued."""
+    await update.message.reply_text("Привет! Я твой личный SMM-ассистент. Спроси меня о чем-нибудь.")
 
-admin_keyboard = [
-    [KeyboardButton("✍️ Написать ассистенту")],
-    [KeyboardButton("Очистить историю")],
-    [KeyboardButton("Панель администратора")],
-]
-
-back_keyboard = [[KeyboardButton("Назад")]]
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    user = update.message.from_user
-    add_user(user.id, user.username, user.first_name, user.last_name)
-    reply_markup = ReplyKeyboardMarkup(admin_keyboard if user.id == ADMIN_ID else main_keyboard, resize_keyboard=True)
-    try:
-        await update.message.reply_text(
-            "Привет! Я твой личный SMM-ассистент. Выбери действие:",
-            reply_markup=reply_markup,
-        )
-    except TimedOut:
-        logging.warning("Timeout error sending start message")
-        await update.message.reply_text("Не удалось подключиться к серверу. Пожалуйста, попробуйте еще раз позже.")
-    return MAIN_MENU
-
-async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    text = update.message.text
+async def clear_history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Clears the user's chat history."""
     user_id = update.message.from_user.id
 
     if text == "✍️ Написать ассистенту":
