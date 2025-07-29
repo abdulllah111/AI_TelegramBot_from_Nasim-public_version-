@@ -29,7 +29,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     reply_markup = ReplyKeyboardMarkup(admin_keyboard if user.id == ADMIN_ID else main_keyboard, resize_keyboard=True)
     try:
         await update.message.reply_text(
-            "Привет! Я твой личный SMM-ассистент. Выбери действие:",
+            "Привет! Я твой личный ИИ-ассистент. Выбери действие:",
             reply_markup=reply_markup,
         )
     except TimedOut:
@@ -68,7 +68,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     history = get_user_history(user.id)
     if not history:
-        history.append({"role": "system", "content": "Ты являешься личным smm специалистом, который помогает пользователям продвигать их аккаунты в социальных сетях."})
+        history.append({"role": "system", "content": "Ты — универсальный ИИ-ассистент. Отвечай на вопросы кратко и по делу."})
     history.append({"role": "user", "content": message_text})
 
     response_text = await generate_response(history)
