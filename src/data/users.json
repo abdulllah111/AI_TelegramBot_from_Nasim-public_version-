@@ -1,0 +1,50 @@
+{
+    "396380942": {
+        "username": "skrudjiy",
+        "fullname": "X91ja+01)$am",
+        "firstname": "X91ja+01)$am",
+        "lastname": null,
+        "is_bot": false,
+        "language_code": "ru",
+        "url": "tg://user?id=396380942",
+        "can_join_groups": null,
+        "can_read_all_group_messages": null,
+        "is_premium": null
+    },
+    "1087968824": {
+        "username": "GroupAnonymousBot",
+        "fullname": "Group",
+        "firstname": "Group",
+        "lastname": null,
+        "is_bot": true,
+        "language_code": null,
+        "url": "tg://user?id=1087968824",
+        "can_join_groups": null,
+        "can_read_all_group_messages": null,
+        "is_premium": null
+    },
+    "1309944247": {
+        "username": "abdul_bp",
+        "fullname": "Абдул",
+        "firstname": "Абдул",
+        "lastname": null,
+        "is_bot": false,
+        "language_code": "ru",
+        "url": "tg://user?id=1309944247",
+        "can_join_groups": null,
+        "can_read_all_group_messages": null,
+        "is_premium": null
+    },
+    "6667406248": {
+        "username": null,
+        "fullname": "👉🇭🇺Lazzat 🇭🇺Fayziev🇭🇺👈",
+        "firstname": "👉🇭🇺Lazzat 🇭🇺Fayziev🇭🇺👈",
+        "lastname": null,
+        "is_bot": false,
+        "language_code": null,
+        "url": "tg://user?id=6667406248",
+        "can_join_groups": null,
+        "can_read_all_group_messages": null,
+        "is_premium": null
+    }
+}

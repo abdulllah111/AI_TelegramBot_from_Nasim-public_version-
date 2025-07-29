@@ -1,81 +1,130 @@
 import logging
-import json
-import os
-from datetime import datetime
-from telegram import Update
-from telegram.ext import ContextTypes
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram.error import TimedOut
+from telegram.ext import ContextTypes, ConversationHandler
 from src.config import ADMIN_ID
 from src.services.gpt import generate_response
-from src.utils.helpers import get_or_create_user, load_chat_history, save_chat_history
+from src.database import add_user, add_request, get_user_count, get_user_history, get_all_users, clear_user_history
 
-# Define a constant for the system prompt
-SYSTEM_PROMPT = """Ты являешься личным smm специалистом, который помогает пользователям продвигать их аккаунты в социальных сетях."""
+# States for conversation
+MAIN_MENU, TYPING_REPLY, ADMIN_PANEL, VIEW_USER_HISTORY = range(4)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /start is issued."""
-    await update.message.reply_text("Привет! Я твой личный SMM-ассистент. Спроси меня о чем-нибудь.")
+# Keyboards
+main_keyboard = [
+    [KeyboardButton("✍️ Написать ассистенту")],
+    [KeyboardButton("Очистить историю")],
+]
 
-async def clear_history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Clears the user's chat history."""
-    user_id = update.message.from_user.id
-    if user_id != ADMIN_ID:
-        await update.message.reply_text("У вас нет прав для выполнения этой команды.")
-        return
+admin_keyboard = [
+    [KeyboardButton("✍️ Написать ассистенту")],
+    [KeyboardButton("Очистить историю")],
+    [KeyboardButton("Панель администратора")],
+]
 
-    history_path = f"src/data/chats_{user_id}.json"
-    if os.path.exists(history_path):
-        try:
-            # Rename the file to archive it
-            archive_path = f"src/data/chats_{user_id}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
-            os.rename(history_path, archive_path)
-            message = "История переписки очищена и заархивирована."
-        except Exception as e:
-            logging.error(f"Error clearing history for user {user_id}: {e}")
-            message = "Произошла ошибка при очистке истории."
-    else:
-        message = "История переписки уже пуста."
+back_keyboard = [[KeyboardButton("Назад")]]
 
-    await update.message.reply_text(message)
-
-
-async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle incoming text messages."""
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user = update.message.from_user
-    user_id = user.id
+    add_user(user.id, user.username, user.first_name, user.last_name)
+    reply_markup = ReplyKeyboardMarkup(admin_keyboard if user.id == ADMIN_ID else main_keyboard, resize_keyboard=True)
+    try:
+        await update.message.reply_text(
+            "Привет! Я твой личный SMM-ассистент. Выбери действие:",
+            reply_markup=reply_markup,
+        )
+    except TimedOut:
+        logging.warning("Timeout error sending start message")
+        await update.message.reply_text("Не удалось подключиться к серверу. Пожалуйста, попробуйте еще раз позже.")
+    return MAIN_MENU
+
+async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    text = update.message.text
+    user_id = update.message.from_user.id
+
+    if text == "✍️ Написать ассистенту":
+        await update.message.reply_text("Напиши свой вопрос:", reply_markup=ReplyKeyboardMarkup(back_keyboard, resize_keyboard=True))
+        return TYPING_REPLY
+    elif text == "Очистить историю":
+        clear_user_history(user_id)
+        await update.message.reply_text("История сообщений очищена.")
+        return MAIN_MENU
+    elif text == "Панель администратора" and user_id == ADMIN_ID:
+        await admin_panel_menu(update, context)
+        return ADMIN_PANEL
+    else:
+        await start(update, context) # Or some other default behavior
+        return MAIN_MENU
+
+async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user = update.message.from_user
     message_text = update.message.text
 
-    logging.info(f"Message '{message_text}' from {user.full_name} ({user_id})")
+    if message_text == "Назад":
+        await start(update, context)
+        return MAIN_MENU
 
-    # 1. Check if the user is an admin
-    if user_id != ADMIN_ID:
-        await update.message.reply_text("Извините, я отвечаю только администратору.")
-        # Optionally, send a voice message like in the old code
-        # await update.message.reply_voice(voice=open('path/to/not_admin.mp3', 'rb'))
-        return
+    await update.message.reply_text("⏳ Генерирую ответ...")
+    logging.info(f"Message '{message_text}' from {user.full_name} ({user.id})")
 
-    # 2. Get or create user profile
-    get_or_create_user(user)
-
-    # 3. Load chat history
-    history = load_chat_history(user_id)
-    if not history:
-        history.extend([
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "assistant", "content": "Хорошо, я готов помочь с SMM."},
-        ])
-
-    # 4. Add user message to history
+    history = get_user_history(user.id)
     history.append({"role": "user", "content": message_text})
 
-    # 5. Generate response
     response_text = await generate_response(history)
     if response_text is None:
         await update.message.reply_text("Произошла ошибка при генерации ответа. Попробуйте позже.")
-        return
+        return MAIN_MENU
 
-    # 6. Add assistant response to history and save
-    history.append({"role": "assistant", "content": response_text})
-    save_chat_history(user_id, history)
-
-    # 7. Send the response to the user
+    add_request(user.id, message_text, response_text)
     await update.message.reply_text(response_text)
+    return TYPING_REPLY
+
+async def admin_panel_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_count = get_user_count()
+    admin_menu_keyboard = [    [KeyboardButton("Посмотреть историю пользователя")],
+    [KeyboardButton("Назад")],
+]
+    await update.message.reply_text(
+        f"**Панель администратора**\n\nВсего пользователей: {user_count}",
+        reply_markup=ReplyKeyboardMarkup(admin_menu_keyboard, resize_keyboard=True),
+        parse_mode='Markdown'
+    )
+
+async def admin_actions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    text = update.message.text
+    if text == "Посмотреть историю пользователя":
+        users = get_all_users()
+        user_buttons = [[KeyboardButton(f"{user[1]} ({user[0]})_history")] for user in users]
+        user_buttons.append([KeyboardButton("Назад")])
+        await update.message.reply_text(
+            "Выбери пользователя:",
+            reply_markup=ReplyKeyboardMarkup(user_buttons, resize_keyboard=True)
+        )
+        return VIEW_USER_HISTORY
+    elif text == "Назад":
+        await start(update, context)
+        return MAIN_MENU
+    return ADMIN_PANEL
+
+async def view_user_history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    text = update.message.text
+    if text.endswith("_history"):
+        try:
+            user_id = int(text.split(' (')[1].split(')')[0])
+            history = get_user_history(user_id, limit=20)
+            if not history:
+                await update.message.reply_text("История сообщений пуста.")
+            else:
+                history_text = ""
+                for msg in history:
+                    history_text += f"*{msg['role'].capitalize()}*: {msg['content']}\n\n"
+                await update.message.reply_text(history_text, parse_mode='Markdown')
+        except (IndexError, ValueError):
+            await update.message.reply_text("Неверный формат. Пожалуйста, выберите пользователя из списка.")
+    elif text == "Назад":
+        await admin_panel_menu(update, context)
+        return ADMIN_PANEL
+    return VIEW_USER_HISTORY
+
+async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text("До свидания!")
+    return ConversationHandler.END

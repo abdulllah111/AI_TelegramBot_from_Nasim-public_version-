@@ -1,20 +1,20 @@
-# Python virtual environment
-venv/
+# Environments
+.env
 
-# Log files
-log/
+# Databases
+bot_data.db
+
+# Logs
+/log/
 *.log
-messages.txt
 
-# Data files
-src/data/
-
-# Media files
-mp3/
-
-# Python cache
+# Python
 __pycache__/
 *.pyc
 
-# Secrets
-src/config.py
+# IDEs
+.idea/
+.vscode/
+
+# venv
+/venv/
