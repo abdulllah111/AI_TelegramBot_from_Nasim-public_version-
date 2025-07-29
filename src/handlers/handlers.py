@@ -6,15 +6,39 @@ from src.config import ADMIN_ID
 from src.services.gpt import generate_response
 from src.database import add_user, add_request, get_user_count, get_user_history, get_all_users, clear_user_history
 
-# Define a constant for the system prompt
-SYSTEM_PROMPT = """Ты являешься личным smm специалистом, который помогает пользователям продвигать их аккаунты в социальных сетях."""
+# States for conversation
+MAIN_MENU, TYPING_REPLY, ADMIN_PANEL, VIEW_USER_HISTORY = range(4)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /start is issued."""
-    await update.message.reply_text("Привет! Я твой личный SMM-ассистент. Спроси меня о чем-нибудь.")
+# Keyboards
+main_keyboard = [
+    [KeyboardButton("✍️ Написать ассистенту")],
+    [KeyboardButton("Очистить историю")],
+]
 
-async def clear_history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Clears the user's chat history."""
+admin_keyboard = [
+    [KeyboardButton("✍️ Написать ассистенту")],
+    [KeyboardButton("Очистить историю")],
+    [KeyboardButton("Панель администратора")],
+]
+
+back_keyboard = [[KeyboardButton("Назад")]]
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user = update.message.from_user
+    add_user(user.id, user.username, user.first_name, user.last_name)
+    reply_markup = ReplyKeyboardMarkup(admin_keyboard if user.id == ADMIN_ID else main_keyboard, resize_keyboard=True)
+    try:
+        await update.message.reply_text(
+            "Привет! Я твой личный SMM-ассистент. Выбери действие:",
+            reply_markup=reply_markup,
+        )
+    except TimedOut:
+        logging.warning("Timeout error sending start message")
+        await update.message.reply_text("Не удалось подключиться к серверу. Пожалуйста, попробуйте еще раз позже.")
+    return MAIN_MENU
+
+async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    text = update.message.text
     user_id = update.message.from_user.id
 
     if text == "✍️ Написать ассистенту":
@@ -28,7 +52,7 @@ async def clear_history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await admin_panel_menu(update, context)
         return ADMIN_PANEL
     else:
-        await start(update, context) # Or some other default behavior
+        await start(update, context)
         return MAIN_MENU
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -43,6 +67,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     logging.info(f"Message '{message_text}' from {user.full_name} ({user.id})")
 
     history = get_user_history(user.id)
+    if not history:
+        history.append({"role": "system", "content": "Ты являешься личным smm специалистом, который помогает пользователям продвигать их аккаунты в социальных сетях."})
     history.append({"role": "user", "content": message_text})
 
     response_text = await generate_response(history)
