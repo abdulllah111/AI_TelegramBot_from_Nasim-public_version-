@@ -127,7 +127,14 @@ async def view_user_history(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                 history_text = ""
                 for msg in history:
                     history_text += f"*{msg['role'].capitalize()}*: {msg['content']}\n\n"
-                await update.message.reply_text(history_text, parse_mode='Markdown')
+                
+                max_length = 4096
+                if len(history_text) > max_length:
+                    for i in range(0, len(history_text), max_length):
+                        await update.message.reply_text(history_text[i:i + max_length], parse_mode=ParseMode.MARKDOWN)
+                else:
+                    await update.message.reply_text(history_text, parse_mode=ParseMode.MARKDOWN)
+
         except (IndexError, ValueError):
             await update.message.reply_text("Неверный формат. Пожалуйста, выберите пользователя из списка.")
     elif text == "Назад":
